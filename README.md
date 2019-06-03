@@ -1,9 +1,10 @@
-# PSBT Recovery
+# Coldcard PSBT Recovery
 
 A simple program to create a PSBT from various keypaths related to
-a Coldcard. Searches for UTXO using <https://Blockstream.info/> API calls.
+a [Coldcard](https://coldcardwallet.com). Searches for your
+UTXO using <https://Blockstream.info> API calls.
 
-Typical use will use the "public.txt" file exported from a Coldcard. 
+Typical use will use the `public.txt` file exported from a Coldcard. 
 For now, it only handles addresses explicitly listed in that file (first five)
 but could be improved easily to search more broadly to deposits to a Coldcard.
 
