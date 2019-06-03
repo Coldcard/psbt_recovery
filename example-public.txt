@@ -1,0 +1,124 @@
+# Coldcard Wallet Summary File
+## For wallet with master key fingerprint: 4369050F
+
+### Wallet operates on blockchain: Bitcoin Testnet
+
+For BIP44, this is coin_type '1', and internally we use symbol XTN for this blockchain.
+
+## Top-level, 'master' extended public key ('m/'):
+
+tpubD6NzVbkrYhZ4XzL5Dhayo67Gorv1YMS7j8pRUvVMd5odC2LBPLAygka9p7748JtSq82FNGPppFEz5xxZUdasBRCqJqXvUHq6xpnsMcYJzeh
+
+
+Derived public keys, as may be needed for different systems:
+
+
+## For Bitcoin Core: m/{account}'/{change}'/{idx}'
+
+m => tpubD6NzVbkrYhZ4XzL5Dhayo67Gorv1YMS7j8pRUvVMd5odC2LBPLAygka9p7748JtSq82FNGPppFEz5xxZUdasBRCqJqXvUHq6xpnsMcYJzeh
+
+... first 5 receive addresses (account=0, change=0):
+
+m/0'/0'/0' => n3ieqYKgVR8oB2zsHVX1Pr7Zc31pP3C7ZJ
+m/0'/0'/1' => mxdBZ5va2Z2kZUjPUPXizXNgPRYnoe2arJ
+m/0'/0'/2' => mtCWD93LGCbKydRh4CVoZkk5yryaprtCFN
+m/0'/0'/3' => mo92QdcrfszH2kg22veey17Sm49d597hAh
+m/0'/0'/4' => mvUVep7Put4LpEZjHWEYsvXKUx6kKJg76K
+
+
+## For Bitcoin Core (Segregated Witness, P2PKH): m/{account}'/{change}'/{idx}'
+
+m => tpubD6NzVbkrYhZ4XzL5Dhayo67Gorv1YMS7j8pRUvVMd5odC2LBPLAygka9p7748JtSq82FNGPppFEz5xxZUdasBRCqJqXvUHq6xpnsMcYJzeh
+# SLIP-132 style
+m => vpub5SLqN2bLY4WeZbkz6o2eAzau8oXTfix4MHBgZaeSXAHyLY31onzmJBb3Xf76bzdNDwFjFjgqMphqdDEpeNubhWPLWZPmcwXtqR5ApPBKwYE
+
+... first 5 receive addresses (account=0, change=0):
+
+m/0'/0'/0' => tb1q7wyjlvslzczhvn5splzvxvqtqpq4ut38e3x9q3
+m/0'/0'/1' => tb1qhwnm8j2fmvtpatny5zw6qm6ve2ma39u50qffpy
+m/0'/0'/2' => tb1q3vw9lxvhm8e5fcznkdqw45jmeg5vhtkd6j6uf5
+m/0'/0'/3' => tb1q2wd5nmlhv2pg5a0x4edcxwt4qnsq9pxr2alpnp
+m/0'/0'/4' => tb1q5sfdptg93zp9exhywzy9382x65dyns34fgnlqz
+
+
+## For Electrum (not BIP44): m/{change}/{idx}
+
+m => tpubD6NzVbkrYhZ4XzL5Dhayo67Gorv1YMS7j8pRUvVMd5odC2LBPLAygka9p7748JtSq82FNGPppFEz5xxZUdasBRCqJqXvUHq6xpnsMcYJzeh
+
+... first 5 receive addresses (account=0, change=0):
+
+m/0/0 => mgXtK5HnvpgAM2tUvbwZ8z1YbouTCe1hW5
+m/0/1 => msRDCUoNLzVW9xdY7WQ36v8PfgBzdCRfY4
+m/0/2 => mh7finD8ctq159hbRzAeevSuFBJ1NQjoH2
+m/0/3 => mjcHcR28EC9EUjwvJuHP4soipwsHTRupHR
+m/0/4 => myuziudzi7Vbh2XZLV29jwq6bfhwYqdbLJ
+
+
+## For BIP44 / Electrum: m/44'/1'/{account}'/{change}/{idx}
+
+m/44'/1' => tpubDBhBG3fyUsfqeSraAkP2s7zCioQZpgCVKvnWJJKqAcUowSL4uVkoHD2mcskLvkk4Eiim72ETM8btRE44aCw5iM8ChHz4jCucF5zJoSX1LXw
+
+... first 5 receive addresses (account=0, change=0):
+
+m/44'/1'/0'/0/0 => mtHSVByP9EYZmB26jASDdPVm19gvpecb5R
+m/44'/1'/0'/0/1 => mi4nT9xGY7MBA9pUbZF5WFAt5ww4HFgsc8
+m/44'/1'/0'/0/2 => n46twT2B5bJYBVqoPAEz6mVS3TbCFX8gSc
+m/44'/1'/0'/0/3 => mspfdREbMeeHapVr9xF7vC67h9L4e6jUMD
+m/44'/1'/0'/0/4 => mvPGoSq5NJ4qDS5mEFKR4ay35du4e33qLe
+
+
+## For BIP49 (P2WPKH-nested-in-P2SH): m/49'/1'/{account}'/{change}/{idx}
+
+m/49'/1' => tpubDB2bRjQ6fX2ermfaUw6BTNKTqVAuKHw5ejUqNibuqVsACw85qVcXn4eT9BsLSeLqeD3ZYdJwKodeTwcj5Tivtsovb1GxFB88ghAAaQFyWUm
+# SLIP-132 style
+m/49'/1' => upub5CAAzVZfWCSm35uNXfkDdBhazTduW3TXMmKsfys7MZydJM1h1JGkmS1CqXunvRRqdPAEgd1PQijx7uHRXWdecjJpvPSNov1SHZNpegZz8jw
+
+... first 5 receive addresses (account=0, change=0):
+
+m/49'/1'/0'/0/0 => 2NCAJ5wD4GvmW32GFLVybKPNphNU8UYoEJv
+m/49'/1'/0'/0/1 => 2MtaCqkBbyweyjESfmfXTRSGjpyiBhZyqCx
+m/49'/1'/0'/0/2 => 2MxTuZhWZoyfeHKYbvZ8zFcoiyARD6htq8P
+m/49'/1'/0'/0/3 => 2N7icQTg3FttDTyczYhLe49ijiiTL4YGwyv
+m/49'/1'/0'/0/4 => 2Mti6y2Vd4XHNbBJ4FUaWNg3XtjbQiJGK88
+
+
+## For BIP84 (Native Segwit P2PKH): m/84'/1'/{account}'/{change}/{idx}
+
+m/84'/1' => tpubDBRJZLrRukCbMNnJKKvcdK4MzqQVJfqwJFzLTvmBsQ9VutQoyY6Lz37jrfRCVehAJhdAtMzDQFZkrHmD9ftzDwYLeMXL7F3rjY8AijtG6jf
+# SLIP-132 style
+m/84'/1' => vpub5XP9Rmguu7ABNzDDCRNH1DXzKn1wS3MsvQMbYavGmUdr4Q7ePzv8bU8daDREyLS5hWremqHDwq2cPY3UKRDik2iqr5PBFtkec8QUBY9PRme
+
+... first 5 receive addresses (account=0, change=0):
+
+m/84'/1'/0'/0/0 => tb1qupyd58ndsh7lut0et0vtrq432jvu9jtdyws9n9
+m/84'/1'/0'/0/1 => tb1qceytj4vfrg22cy7mp5mnfps4ffgseas29mddjp
+m/84'/1'/0'/0/2 => tb1qxvzlcjr2djne6n60q0ytzet49mcqumpdqmluzm
+m/84'/1'/0'/0/3 => tb1qlr7en2u9xcnd5n2var03u7j3yk4ze07kn72mzs
+m/84'/1'/0'/0/4 => tb1qk2gjyuhpvsjqdyrwctkq5ze6dknkapee7qgj6t
+
+
+
+# Your Multisig Wallets
+
+Name: Sample-3-15
+Policy: 3 of 15
+Derivation: 45'
+
+79E279C2: tpubD9h2yEghZWRp4Mvi4MPhyP7ZN8GDqYVRMk6rNf5omds7WTjmRZiok8xgwEP3uXLVbpxVrqnjm4bNXL6tLwHtYF9J7uVSG9u95Yid38fX9dT
+B4F08263: tpubD8zYsexbkYEiCbTso12bUsE8Y1CUn3WHjLER3fWqc8mcP7FhDK1Rc6Tixr6v3SQ4XBi5d4bbTskUCxe4eZujkL2cQ3enCDENtBYJYzYuUaR
+C7466461: tpubD8yeTfF4L8aCEaQbuPjjzNeyPs2WGJPNWcBMDuDP7NP2VjLBCB5afvfhAg3oTytxvnLXZbMBWyEhs2nt3wmduwSCMotB8RHcxxkvMRtZHrq
+3C3C00C9: tpubD9jpJX26AjUzTjCuZb9PfWmKjrSjFzXfNjBFwMY6ckt9qw3m9rpYw3NGD2yZut6UbFuQZm2xttchgchzGjJn26Fu1uZp1tveV1WcmUaXpay
+D1790E2F: tpubD8cBsaZfRPmyPGVeThECbc9QSVeMwbPFiSjP9sL18wWvgmr4d5zRKt6Ui4ULRh1upZ2PyEkkYYRpkLm54A9kNTtS6bdyfr1spz2VnKheikt
+781FA47B: tpubD9AqW9bXwRSdDeCroC88GD4DGyst1Q3gN4FfdZQRow2zR3ctEMLoVSqGghVKYFk1PhEaGuRxkYSEEL8gxK36JuTCV8Lx8cn7SNQsChcgEEd
+C406B677: tpubD99AL1Y6SZd21cfQUYQMn9CZ2qUaLV1TtNeHdiF6zLdP8EiEpKAbfnyjFupZhfacc6SR3GCv3HcTNDaYBPnXkpmefrvwKUmAhfkfiegQ5jP
+FBA1CA0D: tpubD8N1Mwa4k3qCBuTBUMRRjhYoinWKV4RL3F7ejGmyqdm6iJJrdkEgwUw8Bme9DKdda4VEPT6BxnaPXkXXtF4Z6Z9HS4zdrwiMHnvkaMRgGVo
+AE261795: tpubD9MgmFNaPdLHfFX7bZvyiDir5vM7DL2P8cXAMKNdhrnnUwcj4ts1PpjkXKNZcSBozs9dfnw3TrEYaSPmGbhpkVN6hunUheyBvzmwiD27k9E
+FC267DEF: tpubDA2DxRfGUHmsbj3TthZSUyaBYhxgKc2wDMTAmTyN1ZhkTjB6LwFFTL9QCaRKUQKm4sBAxyr5mEdaj5BDK85ERSyb3qAVyrGkC5fJcVhMczu
+751D66E4: tpubD9wVkBGpo7g3jpWe7HZ72aHcXawpvb8k7RpfhXP3P8pcKTzXxgbu8zQas4kmRno3LW9n5KL6PoDfiQxEmXu3Dio6dndP8WvZWQoptPvJPNW
+6D5C7071: tpubD96VF6RREC5d9oVPgjC2iTDve65yNw3yCGm27bFgstzwS5bT77HJPL6UGtn73qthqvHWq9LmKM6GExum5WL1hVMuY62FuEyU695Pv9rGpny
+7605A55D: tpubD8x3oveobb62Fnjt5gqr22PgcBuSHLdYxoQVvZSpmhWeFpSuTyZQ9pWAKVTNxZ4xUsJ3TvdyCZbyE767xkxeXU3i4YPzXeWggMUHvGHhFX9
+EF483023: tpubD8X8Rg6iL6cFEFJW6mUyF4mfEVKRJDn4EUWkFg6mrk6XheRuy5zCBk5KPeZVgH1GgWo52nJLJHj4vm5PpJZbSJf5DWFQDwbtv1N1DSH67Fn
+4369050F: tpubD8NXmKsmWp3a3DXhbihAYbYLGaRNVdTnr6JoSxxfXYQcmwVtW2hv8QoDwng6JtEonmJoL3cNEwfd2cLXMpGezwZ2vL2dQ7259bueNKj9C8n
+
+---
+
