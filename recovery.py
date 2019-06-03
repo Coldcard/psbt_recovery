@@ -12,15 +12,18 @@ from psbt import BasicPSBT, BasicPSBTInput, BasicPSBTOutput
 from pprint import pformat
 from binascii import b2a_hex as _b2a_hex
 from binascii import a2b_hex
+from io import BytesIO
 from collections import namedtuple
 from base64 import b64encode, b64decode
 from pycoin.tx.Tx import Tx
 from pycoin.tx.TxOut import TxOut
 from pycoin.tx.TxIn import TxIn
+from pycoin.ui import standard_tx_out_script
 from pycoin.encoding import b2a_hashed_base58, hash160
 from pycoin.serialize import b2h_rev, b2h, h2b, h2b_rev
 from pycoin.contrib.segwit_addr import encode as bech32_encode
 from pycoin.key.BIP32Node import BIP32Node
+from pycoin.convention import tx_fee
 import urllib.request
 
 b2a_hex = lambda a: str(_b2a_hex(a), 'ascii')
@@ -69,7 +72,7 @@ def calc_pubkey(xpubs, path):
     assert path[0:2] == 'm/'
 
     hard_prefix = '/'.join(s for s in path.split('/') if s[-1] == "'")
-    hard_depth = hard_prefix.count('/')
+    hard_depth = hard_prefix.count('/') + 1
 
     want = ('m/'+hard_prefix) if hard_prefix else 'm'
     assert want in xpubs, f"Need: {want} to build pubkey of {path}"
@@ -157,22 +160,21 @@ def recovery(public_txt, payout_address, out_psbt, testnet, xfp=None):
     print("Found %d xpubs: %s" % (len(xpubs), '    '.join(xpubs)))
     print("Found %d addresses. Checking for balances.\n" % len(addrs))
 
-    # verify we have enough data
-    trouble = 0
-    for path, addr in addrs:
-        try:
-            calc_pubkey(xpubs, path)
-        except AssertionError as exc:
-            print(str(exc))
-            trouble += 1
-
-    if trouble:
-        sys.exit(1)
+    if 0:
+        # verify we have enough data
+        trouble = 0
+        for path, addr in addrs:
+            try:
+                calc_pubkey(xpubs, path)
+            except AssertionError as exc:
+                print(str(exc))
+                trouble += 1
+        if trouble:
+            sys.exit(1)
 
     spending = []
-    amt = 0
+    total = 0
     psbt = BasicPSBT()
-                
 
     for path, addr in addrs:
         print(f"addr: {addr} ... ", end='')
@@ -190,24 +192,50 @@ def recovery(public_txt, payout_address, out_psbt, testnet, xfp=None):
             tt = TxIn(h2b_rev(u['txid']), u['vout'])
             spending.append(tt)
             #print(rr)
+
             pin = BasicPSBTInput(idx=len(psbt.inputs))
             psbt.inputs.append(pin)
 
-            calc_pubkey(xpubs, path)
+            pubkey = calc_pubkey(xpubs, path)
 
             pin.bip32_paths[pubkey] = str2path(xfp, path)
 
         print('%.8f BTC' % (here / 1E8))
-        amt += here
+        total += here
 
         if len(spending) > 15:
             print("Reached practical limit on # of inputs. "
                     "You'll need to repeat this process again later.")
             break
 
-    txn = Tx(2,spending,[])
+    assert total
 
+    print("Found total: %.8f BTC" % (total / 1E8))
 
+    print("Planning to send to: %s" % payout_address)
+
+    dest_scr = standard_tx_out_script(payout_address)
+
+    txn = Tx(2,spending,[TxOut(total, dest_scr)])
+
+    fee = tx_fee.recommended_fee_for_tx(txn)
+
+    print("Guestimate fee: %.8f BTC" % (fee / 1E8))
+
+    txn.txs_out[0].coin_value -= fee
+
+    # write txn into PSBT
+    with BytesIO() as b:
+        txn.stream(b)
+        psbt.txn = b.getvalue()
+
+    # need to round-trip thru bitcoind to load witness/redeem scripts?
+    # - could probably do this with more calls to blockstream's API, etc.
+    print("bitcoin-cli utxoupdatepsbt '%s'" % b64encode(psbt.as_bytes()).decode('ascii'))
+
+    #out_psbt.write(psbt.as_bytes())
+
+    
 
 if __name__ == '__main__':
     recovery()
