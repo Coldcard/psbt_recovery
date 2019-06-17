@@ -9,7 +9,7 @@
 #
 import click, sys, os, pdb, struct, io, json, re, time
 from psbt import BasicPSBT, BasicPSBTInput, BasicPSBTOutput
-from pprint import pformat
+from pprint import pformat, pprint
 from binascii import b2a_hex as _b2a_hex
 from binascii import a2b_hex
 from io import BytesIO
@@ -31,7 +31,7 @@ b2a_hex = lambda a: str(_b2a_hex(a), 'ascii')
 
 TESTNET = False
 
-def explora(*parts): 
+def explora(*parts, is_json=True):
     base = 'https://blockstream.info/'
     if TESTNET:
         base += 'testnet/'
@@ -40,7 +40,7 @@ def explora(*parts):
 
     time.sleep(0.1)
     with urllib.request.urlopen(url) as response:
-       return json.load(response)
+       return json.load(response) if is_json else response.read()
 
 def str2ipath(s):
     # convert text to numeric path for BIP174
@@ -200,6 +200,15 @@ def recovery(public_txt, payout_address, out_psbt, testnet, xfp=None):
 
             pin.bip32_paths[pubkey] = str2path(xfp, path)
 
+            # fetch the UTXO for witness signging
+            td = explora('tx', u['txid'], 'hex', is_json=False)
+            outpt = Tx.from_hex(td.decode('ascii')).txs_out[u['vout']]
+
+            with BytesIO() as b:
+                outpt.stream(b)
+                pin.witness_utxo = b.getvalue()
+
+
         print('%.8f BTC' % (here / 1E8))
         total += here
 
@@ -220,6 +229,10 @@ def recovery(public_txt, payout_address, out_psbt, testnet, xfp=None):
 
     fee = tx_fee.recommended_fee_for_tx(txn)
 
+    # placeholder, single output that isn't change
+    pout = BasicPSBTOutput(idx=0)
+    psbt.outputs.append(pout)
+
     print("Guestimate fee: %.8f BTC" % (fee / 1E8))
 
     txn.txs_out[0].coin_value -= fee
@@ -229,12 +242,9 @@ def recovery(public_txt, payout_address, out_psbt, testnet, xfp=None):
         txn.stream(b)
         psbt.txn = b.getvalue()
 
-    # need to round-trip thru bitcoind to load witness/redeem scripts?
-    # - could probably do this with more calls to blockstream's API, etc.
-    print("bitcoin-cli utxoupdatepsbt '%s'" % b64encode(psbt.as_bytes()).decode('ascii'))
+    out_psbt.write(psbt.as_bytes())
 
-    #out_psbt.write(psbt.as_bytes())
-
+    print("PSBT to be signed:\n\n\t" + out_psbt.name, end='\n\n')
     
 
 if __name__ == '__main__':
