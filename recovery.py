@@ -15,12 +15,14 @@ from binascii import a2b_hex
 from io import BytesIO
 from collections import namedtuple
 from base64 import b64encode, b64decode
-from pycoin.tx.Tx import Tx
-from pycoin.tx.TxOut import TxOut
-from pycoin.tx.TxIn import TxIn
-from pycoin.ui import standard_tx_out_script
-from pycoin.encoding import b2a_hashed_base58, hash160
-from pycoin.serialize import b2h_rev, b2h, h2b, h2b_rev
+from pycoin.coins.bitcoin.Tx import Tx, TxOut, TxIn
+from pycoin.networks.registry import network_for_netcode
+
+#from pycoin.coins.bitcoin.TxOut import TxOut
+#from pycoin.coins.bitcoin.TxIn import TxIn
+#from pycoin.ui import standard_tx_out_script   => network.contract.for_address
+#from pycoin.encoding import b2a_hashed_base58, hash160
+from pycoin.encoding.hexbytes import b2h_rev, b2h, h2b, h2b_rev
 from pycoin.contrib.segwit_addr import encode as bech32_encode
 from pycoin.key.BIP32Node import BIP32Node
 from pycoin.convention import tx_fee
@@ -28,6 +30,8 @@ import urllib.request
 
 b2a_hex = lambda a: str(_b2a_hex(a), 'ascii')
 #xfp2hex = lambda a: b2a_hex(a[::-1]).upper()
+
+BTC = network_for_netcode("BTC")
 
 TESTNET = False
 
@@ -77,7 +81,7 @@ def calc_pubkey(xpubs, path):
     want = ('m/'+hard_prefix) if hard_prefix else 'm'
     assert want in xpubs, f"Need: {want} to build pubkey of {path}"
 
-    node = BIP32Node.from_hwif(xpubs[want])
+    node = BTC.parse.bip32(xpubs[want])
     parts = [s for s in path.split('/') if s != 'm'][hard_depth:]
 
     # node = node.subkey_for_path(path[2:])
@@ -96,7 +100,9 @@ def calc_pubkey(xpubs, path):
 @click.argument('out_psbt', type=click.File('wb'))
 @click.option('--testnet', '-t', help="Assume testnet3 addresses", is_flag=True, default=False)
 @click.option('--xfp', '--fingerprint', help="Provide XFP value, otherwise discovered from file", default=None)
-def recovery(public_txt, payout_address, out_psbt, testnet, xfp=None):
+@click.option('--gap', help="Widen search by searching /[0/1]/0...gap", default=None, type=int)
+@click.option('--xpub', 'single_xpub', help="Limit work to single xpub", default=None)
+def recovery(public_txt, payout_address, out_psbt, testnet, xfp=None, gap=None, single_xpub=None):
 
     global TESTNET
     TESTNET = testnet
@@ -112,8 +118,13 @@ def recovery(public_txt, payout_address, out_psbt, testnet, xfp=None):
     # match pubkeys, including SLIP132 confusion
     pat_pk = re.compile(r"(\wpub\w{100,140})")
 
+    if gap and not single_xpub:
+        print("Must specify xpub if gap feature to be used")
+        sys.exit(1)
+
     addrs = []
     xpubs = {}
+    last_xpub = None
     for ln in public_txt:
 
         m = pat_dest.search(ln)
@@ -125,8 +136,9 @@ def recovery(public_txt, payout_address, out_psbt, testnet, xfp=None):
                 xp = xp.group(1)
                 if path not in xpubs:
                     xpubs[path] = xp
+                    last_xpub = xp
                 elif xpubs[path] != xp:
-                    if xp[0] in 'vVuU':
+                    if xp[0] in 'vVuUzyZY':
                         # slip-132 junk
                         pass
                     else:
@@ -135,6 +147,9 @@ def recovery(public_txt, payout_address, out_psbt, testnet, xfp=None):
             else:
                 #print(f"{path} => {addr}")
                 assert path[0:2] == 'm/'
+
+                if single_xpub and last_xpub != single_xpub:
+                    continue
                 
                 addrs.append( (path, addr) )
 
@@ -157,7 +172,43 @@ def recovery(public_txt, payout_address, out_psbt, testnet, xfp=None):
         print("No addresses found!")
         sys.exit(1)
 
-    print("Found %d xpubs: %s" % (len(xpubs), '    '.join(xpubs)))
+    pubkeys = {}
+    if single_xpub:
+        assert single_xpub in xpubs.values(), "Specific xpub not found: " + repr(xpubs)
+        the_path = [p for p,xp in xpubs.items() if xp == single_xpub][0]
+        the_path += '/{change}/{index}'
+
+        if gap:
+            print(f"Will use deriv path: {the_path}")
+            wallet = BTC.parse.bip32(single_xpub)
+            addr_fmt = None
+            for ch in range(2):
+                for idx in range(gap):
+                    p = the_path.format(change=ch, index=idx)
+                    node = wallet.subkey(ch).subkey(idx)
+
+                    garbage = dict((a,b) for a,b,*c in BTC.output_for_public_pair(node.public_pair()))
+                    if not addr_fmt:
+                        assert idx==0 and ch==0
+                        expect = addrs[0][1]
+                        for k,v in garbage.items():
+                            if v == expect:
+                                addr_fmt = k
+                                print(f"Address format will be: {addr_fmt}")
+                                break
+                        else:
+                            assert not expect, "Could not find 0/0 addr in public?!"
+
+                    addr = garbage[addr_fmt]
+                    print(addr)
+
+                    pubkeys[p] = node.sec()
+                    if idx < 5 and ch == 0:
+                        assert (p, addr) in addrs, f'Got {addr} for {p} but wanted/expected: {addrs[0][0]} => {addrs[0][1]}'
+                    addrs.append( (p, addr) )
+    else:
+        print("Found %d xpubs: %s" % (len(xpubs), '    '.join(xpubs)))
+
     print("Found %d addresses. Checking for balances.\n" % len(addrs))
 
     if 0:
@@ -177,7 +228,7 @@ def recovery(public_txt, payout_address, out_psbt, testnet, xfp=None):
     psbt = BasicPSBT()
 
     for path, addr in addrs:
-        print(f"addr: {addr} ... ", end='')
+        print(f"addr: {path}=>{addr} ... ", end='')
 
         rr = explora('address', addr, 'utxo')
 
@@ -217,13 +268,14 @@ def recovery(public_txt, payout_address, out_psbt, testnet, xfp=None):
                     "You'll need to repeat this process again later.")
             break
 
-    assert total
+    assert total, "sorry didnt find any UTXO"
 
     print("Found total: %.8f BTC" % (total / 1E8))
 
     print("Planning to send to: %s" % payout_address)
 
-    dest_scr = standard_tx_out_script(payout_address)
+    #dest_scr = standard_tx_out_script(payout_address)
+    dest_scr = BTC.contract.for_address(payout_address)
 
     txn = Tx(2,spending,[TxOut(total, dest_scr)])
 
