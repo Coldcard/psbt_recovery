@@ -1,4 +1,7 @@
 
 click>=6.7
 
-pycoin==0.80
+#pycoin==0.80
+# extensive porting, now:
+pycoin==0.90.20200809
+

@@ -8,7 +8,7 @@ from setuptools import setup
 
 setup(
     name='psbt_recover',
-    version='1.0',
+    version='2.0',
     py_modules=[],
     python_requires='>3.6.0',
     install_requires=[
@@ -16,7 +16,7 @@ setup(
     ],
     entry_points='''
         [console_scripts]
-        psbt_recovery=recovery:recovery
+        psbt_recovery=recovery:cli
     ''',
 )
 
