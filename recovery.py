@@ -282,6 +282,7 @@ def descriptor(ctx, descriptor, address, xfp, xpub, depth):
 @click.pass_context
 def recovery(ctx, public_txt, xfp=None, gap=None, single_xpub=None, dump_addrs=None):
 
+    global TESTNET
     locals().update(ctx.obj)
 
     ''' Match lines like:

@@ -19,10 +19,12 @@ but could be improved easily to search more broadly to deposits to a Coldcard.
 ## Requirements
 
 - `python3`
-- `pycoin` version 0.80
+- `pycoin`
 - `click`
 
 (See `requirements.txt`)
+
+# From Public.txt File
 
 ## Input Data
 
@@ -37,10 +39,72 @@ Lines of this form:
 Are searched on the Blockchain... Any UTXO found will be added to the PSBT.
 
 
-# Example Usage
+## Public.txt Usage
 
 ```
-% psbt_recovery example-public.txt output.psbt mtHSVByP9EYZmB26jASDdPVm19gvpecb5R
+% psbt_recovery public example-public.txt mtHSVByP9EYZmB26jASDdPVm19gvpecb5R
 
 ... (lots of good output) ...
+```
+
+# From Miniscript Descriptor
+
+
+Can take a miniscript descriptor (from Bitcoin Core) and it's address
+and find all UTXO for that and build PSBT to move it elsewhere.
+
+Provide also an XPUB and/or XFP to verify those values as it goes
+along. They aren't required.
+
+```
+% psbt_recovery desc "sh(wpkh([e0000002/84'/0'/0'/0/9]022c...43434))#v90hljj9"
+
+... (lots of good output) ...
+```
+
+# Help Messages
+
+
+```
+% psbt_recovery --help
+Usage: psbt_recovery [OPTIONS] COMMAND [ARGS]...
+
+Options:
+  -p, --payout_address 1bitcoinaddr
+  -o, --output_psbt FILENAME
+  -t, --testnet                   Assume testnet3 addresses
+  --help                          Show this message and exit.
+
+Commands:
+  desc
+  public
+```
+
+---
+
+```
+% psbt_recovery desc --help
+Usage: psbt_recovery desc [OPTIONS] FULL-DESCRIPTOR Address
+
+Options:
+  --xfp, --fingerprint TEXT  Provide XFP value, otherwise some checks will be
+                             skipped
+
+  --xpub TEXT                Optional XPUB at hardened depth
+  --depth INTEGER            Depth of xpub given
+  --help                     Show this message and exit.
+```
+
+---
+
+```
+% psbt_recovery public --help
+Usage: psbt_recovery public [OPTIONS] PUBLIC_TXT
+
+Options:
+  --xfp, --fingerprint TEXT  Provide XFP value, otherwise discovered from file
+  --gap INTEGER              Widen search by searching /[0/1]/0...gap
+  --xpub TEXT                Limit work to single xpub
+  --dump_addrs TEXT          Dump addrs and paths we will check (and stop)
+  --help                     Show this message and exit.
 ```
