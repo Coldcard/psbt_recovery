@@ -40,7 +40,7 @@ Are searched on the Blockchain... Any UTXO found will be added to the PSBT.
 # Example Usage
 
 ```
-% psbt_recory example-public.txt output.psbt mtHSVByP9EYZmB26jASDdPVm19gvpecb5R
+% psbt_recovery example-public.txt output.psbt mtHSVByP9EYZmB26jASDdPVm19gvpecb5R
 
 ... (lots of good output) ...
 ```
