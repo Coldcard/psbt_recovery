@@ -76,7 +76,8 @@ assert str2xfp(xfp2str(0x1234)) == 0x1234
 def str2path(xfp, s):
     # output binary needed for BIP-174
     p = list(str2ipath(s))
-    return struct.pack('<%dI' % (1 + len(p)), xfp, *p)
+    # XXX not sure about endian here, but this worked when I needed it
+    return struct.pack('>I', xfp) + struct.pack('<%dI' % len(p), *p)
 
 def calc_pubkey(xpubs, path):
     # given a map of paths to xpubs, and a single path, calculate the pubkey
@@ -100,7 +101,7 @@ def calc_pubkey(xpubs, path):
 
     return node.sec()
 
-def build_psbt(ctx, xfp, addrs, pubkey=None, xpubs=None):
+def build_psbt(ctx, xfp, addrs, pubkey=None, xpubs=None, redeem=None):
     locals().update(ctx.obj)
     payout_address = ctx.obj['payout_address']
     out_psbt = ctx.obj['output_psbt']
@@ -139,11 +140,16 @@ def build_psbt(ctx, xfp, addrs, pubkey=None, xpubs=None):
 
             # fetch the UTXO for witness signging
             td = explora('tx', u['txid'], 'hex', is_json=False)
+
+            #print(f"txis {u['txid']}:\b{td!r}")
             outpt = Tx.from_hex(td.decode('ascii')).txs_out[u['vout']]
 
             with BytesIO() as b:
                 outpt.stream(b)
                 pin.witness_utxo = b.getvalue()
+
+            if redeem:
+                pin.redeem_script = redeem
 
 
         print('%.8f BTC' % (here / 1E8))
@@ -201,7 +207,7 @@ def cli(ctx, payout_address, output_psbt, testnet):
     TESTNET = testnet
     
 
-@cli.command('desc')
+@cli.command('desc', help="Use a descriptor path")
 @click.argument('descriptor', type=str, metavar='FULL-DESCRIPTOR')
 @click.argument('address', type=str, metavar='Address')
 @click.option('--xfp', '--fingerprint', help="Provide XFP value, otherwise some checks will be skipped", default=None)
@@ -252,14 +258,20 @@ def descriptor(ctx, descriptor, address, xfp, xpub, depth):
         pubkey = node.sec()
         assert b2a_hex(pubkey) == expect_pubkey
 
+        p2sh_segwit_script = None
         fails = []
-        for pc_name, guess_addr, *_ in BTC.output_for_public_pair(node.public_pair()):
+        for pc_name, guess_addr, *junk in BTC.output_for_public_pair(node.public_pair()):
+            if pc_name == 'p2sh_segwit_script':
+                p2sh_segwit_script = a2b_hex(guess_addr)
+                continue
+
             if guess_addr == address:
                 addr_fmt = pc_name
                 print(f"Address Format: {addr_fmt} vs {mode} must be right")
-                break
+
             fails.append(guess_addr)
-        else:
+
+        if not addr_fmt:
             print("Can't confirm address based on xpub + path")
             print("tried: " + ' '.join(fails))
             print(f"none match: {address}")
@@ -269,11 +281,11 @@ def descriptor(ctx, descriptor, address, xfp, xpub, depth):
         pubkey = a2b_hex(expect_pubkey)
             
     addrs = [ (path, address) ]
-    build_psbt(ctx, xfp, addrs, pubkey=pubkey)
+    build_psbt(ctx, xfp, addrs, pubkey=pubkey, redeem=p2sh_segwit_script)
         
     
 
-@cli.command('public')
+@cli.command('public', help="Walk contents of public.txt from Coldcard")
 @click.argument('public_txt', type=click.File('rt'))
 @click.option('--xfp', '--fingerprint', help="Provide XFP value, otherwise discovered from file", default=None)
 @click.option('--gap', help="Widen search by searching /[0/1]/0...gap", default=None, type=int)
