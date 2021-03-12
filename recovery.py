@@ -421,7 +421,7 @@ def recovery(ctx, public_txt, xfp=None, gap=None, single_xpub=None, dump_addrs=N
         if trouble:
             sys.exit(1)
 
-    build_psbt(ctx, xfp, addrs)
+    build_psbt(ctx, xfp, addrs, xpubs=xpubs)
 
     
 
