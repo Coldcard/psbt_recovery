@@ -84,9 +84,13 @@ def calc_pubkey(xpubs, path):
     assert path[0:2] == 'm/'
 
     hard_prefix = '/'.join(s for s in path.split('/') if s[-1] == "'")
-    hard_depth = hard_prefix.count('/') + 1
 
-    want = ('m/'+hard_prefix) if hard_prefix else 'm'
+    if hard_prefix:
+        want = ('m/'+hard_prefix) 
+        hard_depth = hard_prefix.count('/') + 1
+    else:
+        want = 'm'
+        hard_depth = 0
     assert want in xpubs, f"Need: {want} to build pubkey of {path}"
 
     node = BTC.parse.bip32(xpubs[want])
@@ -96,6 +100,7 @@ def calc_pubkey(xpubs, path):
     if not parts:
         assert want == path
     else:
+        assert len(parts) >= 2      # 0/1 typical
         for sk in parts:
             node = node.subkey_for_path(sk)
 
@@ -142,11 +147,18 @@ def build_psbt(ctx, xfp, addrs, pubkey=None, xpubs=None, redeem=None):
             td = explora('tx', u['txid'], 'hex', is_json=False)
 
             #print(f"txis {u['txid']}:\b{td!r}")
-            outpt = Tx.from_hex(td.decode('ascii')).txs_out[u['vout']]
+            txn = Tx.from_hex(td.decode('ascii'))
 
-            with BytesIO() as b:
-                outpt.stream(b)
-                pin.witness_utxo = b.getvalue()
+            if 1:
+                # witness utxo -- prefered
+                with BytesIO() as b:
+                    txn.txs_out[u['vout']].stream(b)
+                    pin.witness_utxo = b.getvalue()
+            else:
+                # full funding txn -- semi-tested
+                with BytesIO() as b:
+                    txn.stream(b)
+                    pin.utxo = b.getvalue()
 
             if redeem:
                 pin.redeem_script = redeem
