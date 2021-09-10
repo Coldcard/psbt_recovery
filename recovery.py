@@ -110,10 +110,14 @@ def build_psbt(ctx, xfp, addrs, pubkey=None, xpubs=None, redeem=None):
     locals().update(ctx.obj)
     payout_address = ctx.obj['payout_address']
     out_psbt = ctx.obj['output_psbt']
+    force_fee = ctx.obj['force_fee']
 
     if pubkey:
         assert len(addrs) == 1  # can only be single addr in that case
         assert len(pubkey) == 33
+
+    if not xfp:
+        print("Warning: Using XFP value of zero. Non standard PSBT will result.")
 
     spending = []
     total = 0
@@ -141,7 +145,7 @@ def build_psbt(ctx, xfp, addrs, pubkey=None, xpubs=None, redeem=None):
 
             pubkey = pubkey or calc_pubkey(xpubs, path)
 
-            pin.bip32_paths[pubkey] = str2path(xfp, path)
+            pin.bip32_paths[pubkey] = str2path(xfp or 0, path)
 
             # fetch the UTXO for witness signging
             td = explora('tx', u['txid'], 'hex', is_json=False)
@@ -149,7 +153,8 @@ def build_psbt(ctx, xfp, addrs, pubkey=None, xpubs=None, redeem=None):
             #print(f"txis {u['txid']}:\b{td!r}")
             txn = Tx.from_hex(td.decode('ascii'))
 
-            if 1:
+            # XXX need to know if input was segwit or not
+            if 0:
                 # witness utxo -- prefered
                 with BytesIO() as b:
                     txn.txs_out[u['vout']].stream(b)
@@ -185,13 +190,13 @@ def build_psbt(ctx, xfp, addrs, pubkey=None, xpubs=None, redeem=None):
         print("Output section of PSBT will be empty. Change downstream")
         txn = Tx(2,spending,[])
 
-    fee = tx_fee.recommended_fee_for_tx(txn)
+    fee = force_fee or tx_fee.recommended_fee_for_tx(txn)
+    print("Using miner's fee: %.8f BTC" % (fee / 1E8))
 
     # placeholder, single output that isn't change
     pout = BasicPSBTOutput(idx=0)
     psbt.outputs.append(pout)
 
-    print("Guestimate fee: %.8f BTC" % (fee / 1E8))
 
     if txn.txs_out:
         txn.txs_out[0].coin_value -= fee
@@ -209,11 +214,13 @@ def build_psbt(ctx, xfp, addrs, pubkey=None, xpubs=None, redeem=None):
 @click.option('-p', '--payout_address', type=str, default=None, metavar="1bitcoinaddr")
 @click.option('-o', '--output_psbt', type=click.File('wb'), default="out.psbt")
 @click.option('-t', '--testnet', help="Assume testnet3 addresses", is_flag=True, default=False)
+@click.option('-f', '--fee', type=int, help="Force network fee (default: calc)", metavar='SATOSHIS', default=0)
 @click.pass_context
-def cli(ctx, payout_address, output_psbt, testnet):
+def cli(ctx, payout_address, output_psbt, testnet, fee):
     ctx.ensure_object(dict)
     ctx.obj['payout_address'] = payout_address
     ctx.obj['output_psbt'] = output_psbt
+    ctx.obj['force_fee'] = fee
 
     global TESTNET
     TESTNET = testnet
